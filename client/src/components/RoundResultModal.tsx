@@ -4,6 +4,7 @@ import {
   ROUND_RESULT_AUTO_ADVANCE_SEC,
   RoomStateView,
 } from '@drawsomething/shared';
+import { soundFX } from '../utils/sound';
 
 interface RoundResultModalProps {
   state: RoomStateView;
@@ -127,7 +128,10 @@ export const RoundResultModal: React.FC<RoundResultModalProps> = ({
 
         <button
           type="button"
-          onClick={onNextRound}
+          onClick={() => {
+            soundFX.playConfirm();
+            onNextRound();
+          }}
           className="arcade-btn w-full py-3.5 rounded-2xl bg-[#FFBE0B] text-[#1E1B4B] font-display font-bold text-lg flex items-center justify-center gap-2 cursor-pointer"
         >
           {isFinalRound ? (

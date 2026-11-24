@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Brush, ShieldCheck, Sparkles, Users, Zap } from 'lucide-react';
 import { AVATAR_COLORS } from '@drawsomething/shared';
+import { AudioControls } from './AudioControls';
+import { soundFX } from '../utils/sound';
 
 interface HomeScreenProps {
   initialRoomCode?: string;
@@ -9,6 +11,12 @@ interface HomeScreenProps {
   onCreateRoom: (nickname: string, avatarColor: string) => void;
   onJoinRoom: (roomCode: string, nickname: string, avatarColor: string) => void;
   onOpenAdmin?: () => void;
+  musicEnabled: boolean;
+  musicVolume: number;
+  sfxMuted: boolean;
+  onToggleMusic: () => void;
+  onChangeMusicVolume: (volume: number) => void;
+  onToggleSfx: () => void;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
@@ -18,6 +26,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onCreateRoom,
   onJoinRoom,
   onOpenAdmin,
+  musicEnabled,
+  musicVolume,
+  sfxMuted,
+  onToggleMusic,
+  onChangeMusicVolume,
+  onToggleSfx,
 }) => {
   const [nickname, setNickname] = useState(
     () => sessionStorage.getItem('drawsomething_nick') || ''
@@ -35,6 +49,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const validateNickname = (): string | null => {
     const clean = nickname.trim();
     if (clean.length < 2) {
+      soundFX.playError();
       setLocalError('Escribe un apodo de al menos 2 letras.');
       return null;
     }
@@ -47,6 +62,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     e.preventDefault();
     const clean = validateNickname();
     if (!clean) return;
+    soundFX.playConfirm();
     onCreateRoom(clean, avatarColor);
   };
 
@@ -56,9 +72,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     if (!clean) return;
     const code = roomCode.trim().toUpperCase();
     if (code.length < 4) {
+      soundFX.playError();
       setLocalError('Ingresa el código de sala válido.');
       return;
     }
+    soundFX.playConfirm();
     onJoinRoom(code, clean, avatarColor);
   };
 
@@ -67,6 +85,18 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 py-8">
       <div className="w-full max-w-xl space-y-6">
+        {/* Audio Bar */}
+        <div className="flex justify-end">
+          <AudioControls
+            musicEnabled={musicEnabled}
+            musicVolume={musicVolume}
+            sfxMuted={sfxMuted}
+            onToggleMusic={onToggleMusic}
+            onChangeMusicVolume={onChangeMusicVolume}
+            onToggleSfx={onToggleSfx}
+          />
+        </div>
+
         {/* Hero Title */}
         <div className="text-center space-y-2 animate-pop-in">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFBE0B] border-[3px] border-[#1E1B4B] shadow-[0_3px_0_#1E1B4B] text-sm font-extrabold uppercase tracking-wider">
@@ -112,7 +142,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     key={c}
                     type="button"
                     aria-label={`Color ${c}`}
-                    onClick={() => setAvatarColor(c)}
+                    onClick={() => {
+                      soundFX.playOptionSelect();
+                      setAvatarColor(c);
+                    }}
                     className={`w-8 h-8 rounded-full border-[3px] border-[#1E1B4B] transition-transform ${
                       avatarColor === c
                         ? 'scale-115 ring-3 ring-[#FFBE0B]'
@@ -211,7 +244,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           <div className="flex justify-center pt-1">
             <button
               type="button"
-              onClick={onOpenAdmin}
+              onClick={() => {
+                soundFX.playButtonClick();
+                onOpenAdmin();
+              }}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/15 hover:bg-white/25 text-white border-2 border-white/30 font-display font-bold text-xs sm:text-sm transition-colors cursor-pointer"
             >
               <ShieldCheck className="w-4 h-4 text-[#FFBE0B]" />

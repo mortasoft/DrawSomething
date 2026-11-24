@@ -1,6 +1,7 @@
 import React from 'react';
 import { Brush, RefreshCw, Sparkles, Star } from 'lucide-react';
 import { RoomStateView } from '@drawsomething/shared';
+import { soundFX } from '../utils/sound';
 
 interface WordPickerOverlayProps {
   state: RoomStateView;
@@ -63,7 +64,10 @@ export const WordPickerOverlay: React.FC<WordPickerOverlayProps> = ({
             <button
               key={entry.normalized}
               type="button"
-              onClick={() => onPickWord(entry.normalized)}
+              onClick={() => {
+                soundFX.playConfirm();
+                onPickWord(entry.normalized);
+              }}
               className={`arcade-btn rounded-3xl p-5 text-left flex flex-col justify-between gap-4 cursor-pointer ${
                 isEasy
                   ? 'bg-gradient-to-b from-emerald-50 to-white'
@@ -107,7 +111,10 @@ export const WordPickerOverlay: React.FC<WordPickerOverlayProps> = ({
         <button
           type="button"
           disabled={state.rerollUsed}
-          onClick={onReroll}
+          onClick={() => {
+            soundFX.playReroll();
+            onReroll();
+          }}
           className="arcade-btn px-5 py-2.5 rounded-2xl bg-indigo-100 text-[#1E1B4B] font-bold text-sm flex items-center gap-2 cursor-pointer"
         >
           <RefreshCw className="w-4 h-4" />

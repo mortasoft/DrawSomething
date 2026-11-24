@@ -12,12 +12,20 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { RoomSettings, RoomStateView } from '@drawsomething/shared';
+import { AudioControls } from './AudioControls';
+import { soundFX } from '../utils/sound';
 
 interface LobbyScreenProps {
   state: RoomStateView;
   onUpdateSettings: (settings: Partial<RoomSettings>) => void;
   onStartGame: () => void;
   onLeave: () => void;
+  musicEnabled: boolean;
+  musicVolume: number;
+  sfxMuted: boolean;
+  onToggleMusic: () => void;
+  onChangeMusicVolume: (volume: number) => void;
+  onToggleSfx: () => void;
 }
 
 export const LobbyScreen: React.FC<LobbyScreenProps> = ({
@@ -25,6 +33,12 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
   onUpdateSettings,
   onStartGame,
   onLeave,
+  musicEnabled,
+  musicVolume,
+  sfxMuted,
+  onToggleMusic,
+  onChangeMusicVolume,
+  onToggleSfx,
 }) => {
   const [copiedType, setCopiedType] = useState<'code' | 'link' | null>(null);
   const me = state.players.find((p) => p.id === state.meId);
@@ -32,6 +46,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
   const readyToStart = state.players.length === 2;
 
   const copyText = async (text: string, type: 'code' | 'link') => {
+    soundFX.playCopy();
     try {
       await navigator.clipboard.writeText(text);
       setCopiedType(type);
@@ -47,18 +62,32 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
     <div className="min-h-screen flex items-center justify-center p-4 py-8">
       <div className="w-full max-w-2xl space-y-5">
         {/* Top bar */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div className="font-display text-3xl font-bold text-white drop-shadow-[0_3px_0_#1E1B4B]">
             Dibuja<span className="text-[#FFBE0B]">Ya!</span>
           </div>
-          <button
-            type="button"
-            onClick={onLeave}
-            className="arcade-btn px-4 py-2 rounded-xl bg-white text-sm font-extrabold flex items-center gap-2 cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-            Salir
-          </button>
+          <div className="flex items-center gap-2">
+            <AudioControls
+              compact
+              musicEnabled={musicEnabled}
+              musicVolume={musicVolume}
+              sfxMuted={sfxMuted}
+              onToggleMusic={onToggleMusic}
+              onChangeMusicVolume={onChangeMusicVolume}
+              onToggleSfx={onToggleSfx}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                soundFX.playBack();
+                onLeave();
+              }}
+              className="arcade-btn px-4 py-2 rounded-xl bg-white text-sm font-extrabold flex items-center gap-2 cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+              Salir
+            </button>
+          </div>
         </div>
 
         {/* Invite Code Banner */}
@@ -188,7 +217,10 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     key={r}
                     type="button"
                     disabled={!isHost}
-                    onClick={() => onUpdateSettings({ totalRounds: r })}
+                    onClick={() => {
+                      soundFX.playOptionSelect();
+                      onUpdateSettings({ totalRounds: r });
+                    }}
                     className={`py-2 rounded-xl border-[2.5px] border-[#1E1B4B] font-display font-bold text-sm transition-colors cursor-pointer ${
                       state.settings.totalRounds === r
                         ? 'bg-[#FFBE0B] text-[#1E1B4B]'
@@ -212,7 +244,10 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     key={sec}
                     type="button"
                     disabled={!isHost}
-                    onClick={() => onUpdateSettings({ turnDurationSec: sec })}
+                    onClick={() => {
+                      soundFX.playOptionSelect();
+                      onUpdateSettings({ turnDurationSec: sec });
+                    }}
                     className={`py-2 rounded-xl border-[2.5px] border-[#1E1B4B] font-display font-bold text-sm transition-colors cursor-pointer ${
                       state.settings.turnDurationSec === sec
                         ? 'bg-[#2EC4B6] text-[#1E1B4B]'
@@ -241,7 +276,10 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     key={lang.id}
                     type="button"
                     disabled={!isHost}
-                    onClick={() => onUpdateSettings({ language: lang.id })}
+                    onClick={() => {
+                      soundFX.playOptionSelect();
+                      onUpdateSettings({ language: lang.id });
+                    }}
                     className={`py-2 rounded-xl border-[2.5px] border-[#1E1B4B] font-display font-bold text-sm transition-colors cursor-pointer ${
                       state.settings.language === lang.id
                         ? 'bg-[#FF4D6D] text-white'
@@ -260,7 +298,10 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
               <button
                 type="button"
                 disabled={!readyToStart}
-                onClick={onStartGame}
+                onClick={() => {
+                  soundFX.playConfirm();
+                  onStartGame();
+                }}
                 className="arcade-btn w-full py-4 rounded-2xl bg-[#06D6A0] text-[#1E1B4B] font-display font-bold text-xl flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Play className="w-6 h-6 fill-current" />

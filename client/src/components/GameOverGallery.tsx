@@ -14,6 +14,8 @@ import {
   RoundRecord,
   renderOperations,
 } from '@drawsomething/shared';
+import { AudioControls } from './AudioControls';
+import { soundFX } from '../utils/sound';
 
 interface GalleryCardProps {
   record: RoundRecord;
@@ -34,6 +36,7 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ record, drawerName }) => {
   const handleDownload = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    soundFX.playCopy();
     const link = document.createElement('a');
     link.download = `dibujaya-ronda-${record.roundNumber}-${record.normalizedWord.toLowerCase()}.png`;
     link.href = canvas.toDataURL('image/png');
@@ -97,12 +100,24 @@ interface GameOverGalleryProps {
   state: RoomStateView;
   onRematch: () => void;
   onLeave: () => void;
+  musicEnabled: boolean;
+  musicVolume: number;
+  sfxMuted: boolean;
+  onToggleMusic: () => void;
+  onChangeMusicVolume: (volume: number) => void;
+  onToggleSfx: () => void;
 }
 
 export const GameOverGallery: React.FC<GameOverGalleryProps> = ({
   state,
   onRematch,
   onLeave,
+  musicEnabled,
+  musicVolume,
+  sfxMuted,
+  onToggleMusic,
+  onChangeMusicVolume,
+  onToggleSfx,
 }) => {
   const sorted = [...state.players].sort((a, b) => b.score - a.score);
   const isTie = sorted.length === 2 && sorted[0].score === sorted[1].score;
@@ -113,6 +128,22 @@ export const GameOverGallery: React.FC<GameOverGalleryProps> = ({
 
   return (
     <div className="min-h-screen p-4 py-8 max-w-5xl mx-auto space-y-6">
+      {/* Top bar */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="font-display text-3xl font-bold text-white drop-shadow-[0_3px_0_#1E1B4B]">
+          Dibuja<span className="text-[#FFBE0B]">Ya!</span>
+        </div>
+        <AudioControls
+          compact
+          musicEnabled={musicEnabled}
+          musicVolume={musicVolume}
+          sfxMuted={sfxMuted}
+          onToggleMusic={onToggleMusic}
+          onChangeMusicVolume={onChangeMusicVolume}
+          onToggleSfx={onToggleSfx}
+        />
+      </div>
+
       {/* Winner Podium Card */}
       <div className="arcade-card rounded-3xl p-6 sm:p-8 text-center space-y-5 animate-pop-in bg-gradient-to-b from-amber-50 to-white">
         <div className="w-20 h-20 mx-auto rounded-3xl bg-[#FFBE0B] border-[3px] border-[#1E1B4B] shadow-[0_4px_0_#1E1B4B] flex items-center justify-center animate-float-slow">
@@ -161,7 +192,10 @@ export const GameOverGallery: React.FC<GameOverGalleryProps> = ({
           <button
             type="button"
             disabled={state.players.length < 2}
-            onClick={onRematch}
+            onClick={() => {
+              soundFX.playConfirm();
+              onRematch();
+            }}
             className="arcade-btn px-6 py-3.5 rounded-2xl bg-[#06D6A0] text-[#1E1B4B] font-display font-bold text-lg flex items-center gap-2 cursor-pointer"
           >
             <RotateCcw className="w-5 h-5" />
@@ -169,7 +203,10 @@ export const GameOverGallery: React.FC<GameOverGalleryProps> = ({
           </button>
           <button
             type="button"
-            onClick={onLeave}
+            onClick={() => {
+              soundFX.playBack();
+              onLeave();
+            }}
             className="arcade-btn px-5 py-3.5 rounded-2xl bg-white text-[#1E1B4B] font-display font-bold text-lg flex items-center gap-2 cursor-pointer"
           >
             <Home className="w-5 h-5" />

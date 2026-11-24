@@ -1,20 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { LogOut, Palette, Puzzle, Volume2, VolumeX } from 'lucide-react';
+import { LogOut, Palette, Puzzle } from 'lucide-react';
 import { RoomStateView, WORD_PICK_DURATION_SEC } from '@drawsomething/shared';
 import { soundFX } from '../utils/sound';
+import { musicEngine } from '../utils/music';
+import { AudioControls } from './AudioControls';
 
 interface GameHeaderProps {
   state: RoomStateView;
-  muted: boolean;
-  onToggleMute: () => void;
   onLeave: () => void;
+  musicEnabled: boolean;
+  musicVolume: number;
+  sfxMuted: boolean;
+  onToggleMusic: () => void;
+  onChangeMusicVolume: (volume: number) => void;
+  onToggleSfx: () => void;
 }
 
 export const GameHeader: React.FC<GameHeaderProps> = ({
   state,
-  muted,
-  onToggleMute,
   onLeave,
+  musicEnabled,
+  musicVolume,
+  sfxMuted,
+  onToggleMusic,
+  onChangeMusicVolume,
+  onToggleSfx,
 }) => {
   const [remainingMs, setRemainingMs] = useState(0);
   const lastTickSecRef = useRef<number | null>(null);
@@ -54,6 +64,11 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
   const barColor =
     pct > 50 ? 'bg-[#06D6A0]' : pct > 20 ? 'bg-[#FFBE0B]' : 'bg-[#FF4D6D]';
   const isUrgent = state.phase === 'drawing' && remainingSec > 0 && remainingSec <= 10;
+
+  useEffect(() => {
+    musicEngine.setUrgent(isUrgent);
+    return () => musicEngine.setUrgent(false);
+  }, [isUrgent]);
 
   return (
     <header className="w-full max-w-6xl mx-auto arcade-card-sm rounded-2xl px-3 py-2.5 sm:px-5 sm:py-3 space-y-2">
@@ -123,21 +138,21 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
               {remainingSec}s
             </div>
           )}
+          <AudioControls
+            compact
+            musicEnabled={musicEnabled}
+            musicVolume={musicVolume}
+            sfxMuted={sfxMuted}
+            onToggleMusic={onToggleMusic}
+            onChangeMusicVolume={onChangeMusicVolume}
+            onToggleSfx={onToggleSfx}
+          />
           <button
             type="button"
-            onClick={onToggleMute}
-            aria-label={muted ? 'Activar sonido' : 'Silenciar'}
-            className="arcade-btn p-2 rounded-xl bg-white cursor-pointer"
-          >
-            {muted ? (
-              <VolumeX className="w-4 h-4 text-rose-600" />
-            ) : (
-              <Volume2 className="w-4 h-4 text-indigo-950" />
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={onLeave}
+            onClick={() => {
+              soundFX.playBack();
+              onLeave();
+            }}
             aria-label="Salir de la partida"
             className="arcade-btn p-2 rounded-xl bg-rose-100 cursor-pointer"
           >

@@ -10,6 +10,7 @@ import {
 } from '@drawsomething/shared';
 import { emitWithAck, getPlayerToken, socket } from './socket';
 import { soundFX } from './utils/sound';
+import { musicEngine } from './utils/music';
 import { HomeScreen } from './components/HomeScreen';
 import { LobbyScreen } from './components/LobbyScreen';
 import { GameHeader } from './components/GameHeader';
@@ -30,6 +31,12 @@ function GameApp({ onOpenAdmin }: GameAppProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [muted, setMuted] = useState(() => soundFX.isMuted());
+  const [musicEnabled, setMusicEnabled] = useState(() =>
+    musicEngine.isEnabled()
+  );
+  const [musicVolume, setMusicVolume] = useState(() =>
+    musicEngine.getVolume()
+  );
 
   // Drawer local tool state
   const [tool, setTool] = useState<ToolType>('pencil');
@@ -64,8 +71,15 @@ function GameApp({ onOpenAdmin }: GameAppProps) {
       if (prevPhase !== next.phase) {
         if (next.phase === 'drawing') {
           soundFX.playTurnStart();
-        } else if (next.phase === 'round_end' && next.lastRoundResult?.guessed) {
-          soundFX.playCorrectGuess();
+        } else if (next.phase === 'round_end') {
+          if (next.lastRoundResult?.guessed) {
+            soundFX.playCorrectGuess();
+          } else if (
+            !next.lastRoundResult?.gaveUp ||
+            next.meId !== next.guesserId
+          ) {
+            soundFX.playGiveUp();
+          }
         } else if (next.phase === 'game_over') {
           soundFX.playVictory();
         }
@@ -153,10 +167,46 @@ function GameApp({ onOpenAdmin }: GameAppProps) {
     setRoomState(null);
   };
 
+  useEffect(() => {
+    const phase = roomState?.phase;
+    if (!phase || phase === 'lobby' || phase === 'game_over') {
+      musicEngine.setUrgent(false);
+      musicEngine.setTrack('menu');
+    } else {
+      if (phase !== 'drawing') {
+        musicEngine.setUrgent(false);
+      }
+      musicEngine.setTrack('game');
+    }
+  }, [roomState?.phase]);
+
+  useEffect(() => {
+    return () => {
+      musicEngine.stop();
+    };
+  }, []);
+
   const handleToggleMute = () => {
     const next = !muted;
     soundFX.setMuted(next);
     setMuted(next);
+    if (!next) {
+      soundFX.playToggle(true);
+    }
+  };
+
+  const handleToggleMusic = () => {
+    const next = !musicEnabled;
+    musicEngine.setEnabled(next);
+    if (next) {
+      musicEngine.unlock();
+    }
+    setMusicEnabled(next);
+  };
+
+  const handleChangeMusicVolume = (volume: number) => {
+    musicEngine.setVolume(volume);
+    setMusicVolume(volume);
   };
 
   const handleToggleStylusOnly = () => {
@@ -191,6 +241,15 @@ function GameApp({ onOpenAdmin }: GameAppProps) {
     });
   };
 
+  const audioProps = {
+    musicEnabled,
+    musicVolume,
+    sfxMuted: muted,
+    onToggleMusic: handleToggleMusic,
+    onChangeMusicVolume: handleChangeMusicVolume,
+    onToggleSfx: handleToggleMute,
+  };
+
   if (!roomState) {
     return (
       <HomeScreen
@@ -200,6 +259,7 @@ function GameApp({ onOpenAdmin }: GameAppProps) {
         onCreateRoom={handleCreateRoom}
         onJoinRoom={handleJoinRoom}
         onOpenAdmin={onOpenAdmin}
+        {...audioProps}
       />
     );
   }
@@ -213,6 +273,7 @@ function GameApp({ onOpenAdmin }: GameAppProps) {
         }
         onStartGame={() => void emitWithAck('game:start')}
         onLeave={handleLeaveRoom}
+        {...audioProps}
       />
     );
   }
@@ -223,6 +284,7 @@ function GameApp({ onOpenAdmin }: GameAppProps) {
         state={roomState}
         onRematch={() => void emitWithAck('game:rematch')}
         onLeave={handleLeaveRoom}
+        {...audioProps}
       />
     );
   }
@@ -234,9 +296,8 @@ function GameApp({ onOpenAdmin }: GameAppProps) {
     <div className="min-h-[100dvh] p-2 sm:p-4 flex flex-col gap-2.5 sm:gap-3 max-w-6xl mx-auto">
       <GameHeader
         state={roomState}
-        muted={muted}
-        onToggleMute={handleToggleMute}
         onLeave={handleLeaveRoom}
+        {...audioProps}
       />
 
       {roomState.phase === 'choosing_word' ? (
@@ -363,6 +424,17 @@ export function App() {
     const onPopState = () => setPathname(window.location.pathname);
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  useEffect(() => {
+    const handleGlobalClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      const btn = target?.closest('button');
+      if (!btn || btn.disabled) return;
+      soundFX.playFallbackClick();
+    };
+    document.addEventListener('click', handleGlobalClick);
+    return () => document.removeEventListener('click', handleGlobalClick);
   }, []);
 
   const navigate = (to: string) => {

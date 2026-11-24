@@ -14,6 +14,7 @@ import {
   Undo2,
 } from 'lucide-react';
 import { PRESET_PALETTE, ToolType } from '@drawsomething/shared';
+import { soundFX } from '../utils/sound';
 
 interface ToolPaletteProps {
   tool: ToolType;
@@ -92,7 +93,10 @@ export const ToolPalette: React.FC<ToolPaletteProps> = ({
               <button
                 key={t.id}
                 type="button"
-                onClick={() => onSelectTool(t.id)}
+                onClick={() => {
+                  soundFX.playOptionSelect();
+                  onSelectTool(t.id);
+                }}
                 title={t.label}
                 className={`arcade-btn px-2.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 cursor-pointer ${
                   active
@@ -110,7 +114,10 @@ export const ToolPalette: React.FC<ToolPaletteProps> = ({
         <div className="flex items-center justify-between sm:justify-end gap-1.5">
           <button
             type="button"
-            onClick={onToggleStylusOnly}
+            onClick={() => {
+              soundFX.playToggle(!stylusOnly);
+              onToggleStylusOnly();
+            }}
             title="Solo lápiz (rechazo de palma para tablet)"
             aria-pressed={stylusOnly}
             className={`arcade-btn px-2.5 py-2 rounded-xl font-extrabold text-xs flex items-center gap-1 shrink-0 cursor-pointer ${
@@ -129,7 +136,10 @@ export const ToolPalette: React.FC<ToolPaletteProps> = ({
             <button
               type="button"
               disabled={!canUndo}
-              onClick={onUndo}
+              onClick={() => {
+                soundFX.playUndo();
+                onUndo();
+              }}
               title="Deshacer (Ctrl+Z)"
               className="arcade-btn px-2.5 py-2 rounded-xl bg-sky-100 text-[#1E1B4B] font-extrabold text-xs flex items-center gap-1 cursor-pointer"
             >
@@ -139,7 +149,10 @@ export const ToolPalette: React.FC<ToolPaletteProps> = ({
             <button
               type="button"
               disabled={!canRedo}
-              onClick={onRedo}
+              onClick={() => {
+                soundFX.playRedo();
+                onRedo();
+              }}
               title="Rehacer (Ctrl+Y)"
               className="arcade-btn px-2.5 py-2 rounded-xl bg-sky-100 text-[#1E1B4B] font-extrabold text-xs flex items-center gap-1 cursor-pointer"
             >
@@ -148,7 +161,10 @@ export const ToolPalette: React.FC<ToolPaletteProps> = ({
             </button>
             <button
               type="button"
-              onClick={onClear}
+              onClick={() => {
+                soundFX.playClear();
+                onClear();
+              }}
               title="Limpiar lienzo"
               className="arcade-btn px-2.5 py-2 rounded-xl bg-rose-100 text-rose-800 font-extrabold text-xs flex items-center gap-1 cursor-pointer"
             >
@@ -171,6 +187,7 @@ export const ToolPalette: React.FC<ToolPaletteProps> = ({
                 type="button"
                 aria-label={`Color ${c}`}
                 onClick={() => {
+                  soundFX.playOptionSelect();
                   onSelectColor(c);
                   if (tool === 'eraser') onSelectTool('pen');
                 }}
@@ -206,7 +223,10 @@ export const ToolPalette: React.FC<ToolPaletteProps> = ({
               <button
                 key={s}
                 type="button"
-                onClick={() => onSelectSize(s)}
+                onClick={() => {
+                  soundFX.playOptionSelect();
+                  onSelectSize(s);
+                }}
                 aria-label={`Grosor ${s}px`}
                 className={`w-8 h-8 rounded-xl border-2 border-[#1E1B4B] flex items-center justify-center cursor-pointer ${
                   size === s ? 'bg-[#FFBE0B]' : 'bg-slate-50 hover:bg-slate-100'

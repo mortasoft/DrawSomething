@@ -189,7 +189,10 @@ export const ScrabbleRack: React.FC<ScrabbleRackProps> = ({
           </button>
           <button
             type="button"
-            onClick={onGiveUp}
+            onClick={() => {
+              soundFX.playGiveUp();
+              onGiveUp();
+            }}
             className="arcade-btn px-2.5 py-1.5 rounded-xl bg-rose-100 text-rose-800 font-extrabold text-xs flex items-center gap-1 cursor-pointer"
           >
             <Flag className="w-3.5 h-3.5" />
