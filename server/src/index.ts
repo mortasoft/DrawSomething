@@ -32,6 +32,9 @@ export interface CreateDrawServerOptions extends RoomManagerOptions {
 
 export function createDrawServer(options: CreateDrawServerOptions = {}) {
   const app = express();
+  if (process.env.TRUST_PROXY === 'true' || process.env.TRUST_PROXY === '1') {
+    app.set('trust proxy', 1);
+  }
   app.use(cors());
   app.use(express.json());
 

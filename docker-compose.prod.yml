@@ -1,0 +1,35 @@
+services:
+  dibujaya:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dibujaya-1v1
+    init: true
+    expose:
+      - "3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      TRUST_PROXY: "true"
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Debes configurar ADMIN_PASSWORD en .env}
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:-}
+      WORDS_DATA_PATH: /app/data/words.json
+    volumes:
+      - dibujaya_data:/app/data
+    networks:
+      - default
+      - npm-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3001/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  npm-network:
+    external: true
+
+volumes:
+  dibujaya_data:
