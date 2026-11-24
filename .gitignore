@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+*/dist/
+
+# Environment & credentials
+.env
+.env.*
+!.env.example
+
+# Local persisted data & logs
+data/
+*.log
+npm-debug.log*
+
+# OS & tooling
+.DS_Store
+.impeccable/

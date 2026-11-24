@@ -1,0 +1,21 @@
+{
+  "name": "drawsomething-1v1",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "build:shared": "npm --workspace=shared run build",
+    "dev": "npm run build:shared && concurrently -n shared,server,client -c yellow,cyan,magenta \"npm --workspace=shared run dev\" \"npm --workspace=server run dev\" \"npm --workspace=client run dev\"",
+    "build": "npm run build:shared && npm --workspace=server run build && npm --workspace=client run build",
+    "start": "npm --workspace=server run start",
+    "test": "npm run build:shared && npm --workspace=server run test",
+    "typecheck": "npm run build:shared && npm --workspace=server run typecheck && npm --workspace=client run typecheck"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

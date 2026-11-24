@@ -1,0 +1,33 @@
+services:
+  dibujaya:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dibujaya-1v1
+    init: true
+    ports:
+      - "${APP_PORT:-8088}:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:-}
+      WORDS_DATA_PATH: /app/data/words.json
+    volumes:
+      - dibujaya_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3001/api/health').then((r)=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  dibujaya_data:
